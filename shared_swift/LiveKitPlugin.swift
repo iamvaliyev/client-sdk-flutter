@@ -816,12 +816,21 @@ extension LiveKitPlugin {
             // connected headset. Plain speaker preference is expressed by the
             // selected audio mode/category options, so clear any stale hard
             // override unless the app explicitly forced speaker output.
-            // Only valid for the playAndRecord category. Applied regardless of
-            // who owns activation, since under an external call system the
-            // session is active during a call even though isActive is false.
+            // Only valid for the playAndRecord category.
+            //
+            // Clearing is skipped when an external call system owns the
+            // session. CallKit has no CXSetSpeakerAction: its speaker button is
+            // a system route picker that sets the output override directly and
+            // never reaches the provider delegate. Clearing to .none on the next
+            // engine lifecycle event undid that choice, so the button appeared
+            // to do nothing. Whoever owns activation owns the route.
             if configuration.category == AVAudioSession.Category.playAndRecord.rawValue {
                 do {
-                    try rtcSession.overrideOutputAudioPort(forceSpeakerOutput ? .speaker : .none)
+                    if forceSpeakerOutput {
+                        try rtcSession.overrideOutputAudioPort(.speaker)
+                    } else if isActive {
+                        try rtcSession.overrideOutputAudioPort(.none)
+                    }
                 } catch {
                     // Before the external call system activates the session the
                     // override can fail. Tolerate it, the configuration itself
