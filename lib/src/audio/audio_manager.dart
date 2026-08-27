@@ -377,6 +377,7 @@ class AudioManager {
         preferSpeakerOutput: _preferSpeakerOutput,
         forceSpeakerOutput: _forceSpeakerOutput && _preferSpeakerOutput,
         automatic: _isAutomaticConfigurationEnabled,
+        externallyManaged: !_isSessionActivationEnabled,
       );
 
   /// How microphone input is muted on iOS/macOS.

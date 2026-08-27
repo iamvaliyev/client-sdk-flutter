@@ -24,12 +24,21 @@ class ResolvedAudioSessionPolicy {
     required this.preferSpeakerOutput,
     required this.forceSpeakerOutput,
     required this.automatic,
+    this.externallyManaged = false,
   });
 
   final AudioSessionOptions options;
   final bool preferSpeakerOutput;
   final bool forceSpeakerOutput;
   final bool automatic;
+
+  /// An external call system (CallKit) owns session activation.
+  ///
+  /// Speaker preference must not be expressed through the audio mode then.
+  /// `.videoChat` makes the speaker the category's default output, and the
+  /// system route picker can only ask for the default — so while that mode is
+  /// set there is no way for the user to select the receiver at all.
+  final bool externallyManaged;
 
   NativeAudioConfiguration get appleConfiguration {
     if (automatic) {
@@ -40,7 +49,7 @@ class ResolvedAudioSessionPolicy {
           AppleAudioCategoryOption.allowBluetoothA2DP,
           AppleAudioCategoryOption.allowAirPlay,
         },
-        appleAudioMode: preferSpeakerOutput ? AppleAudioMode.videoChat : AppleAudioMode.voiceChat,
+        appleAudioMode: (preferSpeakerOutput && !externallyManaged) ? AppleAudioMode.videoChat : AppleAudioMode.voiceChat,
       );
     }
 
